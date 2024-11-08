@@ -1,4 +1,8 @@
 import sqlite3 as sql
+from cryptography.fernet import Fernet
+
+key = Fernet.generate_key()
+f = Fernet(key)
 
 def createDB():
     conn =sql.connect("test-kuku.db")
@@ -21,9 +25,10 @@ def createTabla():
     conn.close()
     print("Table Create.")
 
-def insertData(userNickname,Email,ps):
-    conn =sql.connect("./db/test-kuku.db")
+def createUser(userNickname,Email,ps):
+    conn = sql.connect("./db/test-kuku.db")
     cursor = conn.cursor()
+    ps = f.encrypt(b'ps')
     data = "INSERT INTO Users (userNickname,Email,ps) Values (?,?,?)"
     cursor.execute(data,(userNickname,Email,ps))
     conn.commit()
@@ -64,4 +69,4 @@ def delateTable():
     print("Table eliminate.")
 
 if __name__ == "__main__":
-    delateUserById()
+    createUser("sanches","sanche@gmail.com","12343")
