@@ -1,23 +1,24 @@
 from enum import Enum
-
 from fastapi import FastAPI
 
+import sqlite3 as sql
+from cryptography.fernet import Fernet
 
-class ModelName(str, Enum):
-    alexnet = "alexnet"
-    resnet = "resnet"
-    lenet = "lenet"
-
+key = Fernet.generate_key()
+f = Fernet(key)
 
 app = FastAPI()
 
+def getConectDB():
+    conn = sql.connect("../db/test-kuku.db")
+    conn.row_factory = sql.Row
+    return conn
 
-@app.get("/models/{model_name}")
-async def get_model(model_name: ModelName):
-    if model_name is ModelName.alexnet:
-        return {"model_name": model_name, "message": "Deep Learning FTW!"}
-
-    if model_name.value == "lenet":
-        return {"model_name": model_name, "message": "LeCNN all the images"}
-
-    return {"model_name": model_name, "message": "Have some residuals"}
+@app.get("/Users/")
+def getUsers():
+    conn = getConectDB()
+    c = conn.cursor()
+    c.execute( "SELECT * FROM Users" )
+    users = c.fetchall()
+    conn.close()
+    return {"users": [dict(user) for user in users]}

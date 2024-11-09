@@ -1,72 +1,35 @@
+from enum import Enum
+from fastapi import FastAPI, HTTPException
+
 import sqlite3 as sql
 from cryptography.fernet import Fernet
 
 key = Fernet.generate_key()
 f = Fernet(key)
 
-def createDB():
-    conn =sql.connect("test-kuku.db")
-    conn.commit()
-    conn.close()
+app = FastAPI()
 
-def createTabla():
-    conn =sql.connect("./db/test-kuku.db")
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        CREATE TABLE Users (
-        userID INTEGER PRIMARY KEY AUTOINCREMENT,
-        userNickname TEXT NOT NULL,
-        Email TEXT NOT NULL,
-        ps TEXT NOT NULL
-        )"""
-    )
-    conn.commit()
-    conn.close()
-    print("Table Create.")
-
-def createUser(userNickname,Email,ps):
+def getConectDB():
     conn = sql.connect("./db/test-kuku.db")
-    cursor = conn.cursor()
-    ps = f.encrypt(b'ps')
-    data = "INSERT INTO Users (userNickname,Email,ps) Values (?,?,?)"
-    cursor.execute(data,(userNickname,Email,ps))
-    conn.commit()
-    conn.close()
-    print("Insertion Complit.")
+    conn.row_factory = sql.Row
+    return conn
 
-def selctData():
-    conn=sql.connect("./db/test-kuku.db")
-    cusrsor=conn.cursor()
-    cusrsor.execute(
-        """
-        SELECT userID
-        FROM Users;
-        """
-    )
-    conn.commit()
+@app.get("/users/")
+async def getUsers():
+    conn = getConectDB()
+    c = conn.cursor()
+    c.execute( "SELECT * FROM Users" )
+    users = c.fetchall()
     conn.close()
-    print("SELECT USER ID.")
+    return { "AllUsers": users }
 
-def delateUserById():
-    conn = sql.connect("./db/test-kuku.db")
-    cursor = conn.cursor()
-    cursor.execute("DELeTE FROM Users WHERE userID=2;")
-    conn.commit()
+@app.get("/users/{userID}")
+async def getUserID(userID:int):
+    conn = getConectDB()
+    c = conn.cursor()
+    c.execute( f'SELECT userID FROM Users WHERE userid={userID}' )
+    userid = c.fetchone()
     conn.close()
-    print("User delate in Table Users.")
-
-def delateTable():
-    conn = sql.connect("./db/test-kuku.db")
-    cursor = conn.cursor()
-    cursor.execute(
-    """
-    DROP TABLE Users;
-    """
-    )
-    conn.commit()
-    conn.close()
-    print("Table eliminate.")
-
-if __name__ == "__main__":
-    createUser("sanches","sanche@gmail.com","12343")
+    if userid is None:
+        raise HTTPException(status_code=404, detail="UserID not found")
+    return { "UserID": userid[0] }
