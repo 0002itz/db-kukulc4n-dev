@@ -1,9 +1,7 @@
-from enum import Enum
+import sqlite3 as sql
 from fastapi import FastAPI, HTTPException
 
-import sqlite3 as sql
 from cryptography.fernet import Fernet
-
 key = Fernet.generate_key()
 f = Fernet(key)
 
