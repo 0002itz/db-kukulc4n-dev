@@ -71,7 +71,7 @@ def modiTableUsers():
 def delateUserById():
     conn=sql.connect("./db/test-kuku.db")
     c=conn.cursor()
-    c.execute("DELeTE FROM Users WHERE userID=2;")
+    c.execute("DELETE FROM Users WHERE userID=2;")
     conn.commit()
     conn.close()
     print("User delate in Table Users.")
