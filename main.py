@@ -12,7 +12,7 @@ def getConectDB():
     conn.row_factory = sql.Row
     return conn
 
-@app.post("/newUser/")
+@app.post("/newUser/{newUser}")
 async def createUser(Nickname,Email,ps):
     conn = getConectDB()
     c = conn.cursor()
@@ -23,7 +23,7 @@ async def createUser(Nickname,Email,ps):
     c.close()
     return{ "User Create": Nickname }
 
-@app.get("/Users/{Users}")
+@app.get("/allUsers/{Users}")
 async def allUsers():
     conn = getConectDB()
     c = conn.cursor()
@@ -45,7 +45,7 @@ async def user(userID:int):
     return { "User SELECT": userdata }
 
 @app.put("/newNickname/{Nickname}")
-async def ChangeNickname(newNickname:str,oldNickname:str):
+async def ChangNickname(newNickname:str,oldNickname:str):
     conn = getConectDB()
     c = conn.cursor()
     update="UPDATE Users SET userNickname = ? WHERE userNickname = ?;"
@@ -53,6 +53,28 @@ async def ChangeNickname(newNickname:str,oldNickname:str):
     conn.commit()
     c.close()
     return { "Nickname Update complet" : newNickname }
+
+@app.put("/newEmail/{newEmail}")
+async def ChangEmail(newEmail:str,oldEmail:str):
+    conn = getConectDB()
+    c = conn.cursor()
+    update="UPDATE Email FROM Users WHERE Email = ?;"
+    c.execute(update,(oldEmail,))
+    emal = newEmail
+    c.close()
+    return { "Email update ": emal[0] }
+
+@app.put("/newpw/{Newpw}")
+async def newpasword(userNickname:str):
+    conn = getConectDB()
+    c = conn.cursor()
+    userdata = "SELECT ps FROM Users WHERE userNickname=?;"
+    c.execute(userdata,(userNickname,))
+    ps=c.fetchone()
+    #ps.f.decrypt()
+    conn.commit()
+    c.close()
+    return { "New Password": ps }
 
 @app.delete("/delateUser/{userID}")
 async def delateUser(userID:int):
