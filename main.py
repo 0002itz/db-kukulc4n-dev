@@ -32,12 +32,13 @@ async def allUsers():
     c.close()
     return { "AllUsers": users }
 
-@app.get("/User/{userID}")
-async def user(userID:int):
+@app.get("/Userby/{nicknameOremail}")
+async def user(nicknameORemail:str,):
     conn = getConectDB()
     c = conn.cursor()
-    userdata = "SELECT * FROM Users WHERE userID=?;"
-    c.execute(userdata,(userID,))
+    userdata = "SELECT * FROM Users WHERE userNickname=? OR Email=?;"
+    c.execute(userdata,(nicknameORemail,nicknameORemail))
+    #c.execute(f'SELECT * FROM Users WHERE userNickname={nicknameORemail} OR Email={nicknameORemail};')
     userdata = c.fetchone()
     c.close()
     if userdata is None:
@@ -64,17 +65,18 @@ async def ChangEmail(newEmail:str,oldEmail:str):
     c.close()
     return { "Email update ": emal[0] }
 
-@app.put("/newpw/{Newpw}")
-async def newpasword(userNickname:str):
+@app.put("/newPw/{newPw}")
+async def Changpasword(userNickname:str,newPw:str):
     conn = getConectDB()
     c = conn.cursor()
-    userdata = "SELECT ps FROM Users WHERE userNickname=?;"
-    c.execute(userdata,(userNickname,))
-    ps=c.fetchone()
-    #ps.f.decrypt()
+    #oldpw = "SELECT ps FROM Users WHERE userNickname=?;"
+    #c.execute(oldpw,(userNickname,))
+    newPw = f.encrypt(b'newPw')
+    newpw = "UPDATE Users SET ps = ? WHERE usernickname=?"
+    c.execute(newpw,(newPw,userNickname,))
     conn.commit()
     c.close()
-    return { "New Password": ps }
+    return { "New Password": newpw }
 
 @app.delete("/delateUser/{userID}")
 async def delateUser(userID:int):
