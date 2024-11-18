@@ -12,7 +12,16 @@ def getConectDB():
     conn.row_factory = sql.Row
     return conn
 
+@app.get("/Users/")
+async def allUsers():
+    conn = getConectDB()
+    c = conn.cursor()
+    c.execute( "SELECT * FROM Users" )
+    users = c.fetchall()
+    c.close()
+    return { "AllUsers": users }
 @app.post("/newUser/{newUser}")
+
 async def createUser(Nickname,Email,ps):
     conn = getConectDB()
     c = conn.cursor()
@@ -22,15 +31,6 @@ async def createUser(Nickname,Email,ps):
     conn.commit()
     c.close()
     return{ "User Create": Nickname }
-
-@app.get("/allUsers/{Users}")
-async def allUsers():
-    conn = getConectDB()
-    c = conn.cursor()
-    c.execute( "SELECT * FROM Users" )
-    users = c.fetchall()
-    c.close()
-    return { "AllUsers": users }
 
 @app.get("/Userby/{nicknameOremail}")
 async def user(nicknameORemail:str,):
