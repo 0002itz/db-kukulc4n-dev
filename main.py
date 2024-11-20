@@ -1,5 +1,5 @@
 import sqlite3 as sql
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Form
 from cryptography.fernet import Fernet
 
 key = Fernet.generate_key()
@@ -12,7 +12,7 @@ def getConectDB():
     conn.row_factory = sql.Row
     return conn
 
-@app.get("/Users/")
+@app.get("/users/")
 async def allUsers():
     conn = getConectDB()
     c = conn.cursor()
@@ -20,9 +20,9 @@ async def allUsers():
     users = c.fetchall()
     c.close()
     return { "AllUsers": users }
-@app.post("/newUser/{newUser}")
 
-async def createUser(Nickname,Email,ps):
+@app.post("/newUser/{newUser}")
+async def createUser(Nickname:str = Form(...),Email:str = Form(...),ps:str = Form(...)):
     conn = getConectDB()
     c = conn.cursor()
     ps = f.encrypt(b'ps')
@@ -30,7 +30,7 @@ async def createUser(Nickname,Email,ps):
     c.execute(data_insert,(Nickname,Email,ps,))
     conn.commit()
     c.close()
-    return{ "User Create": Nickname }
+    return{ "User Create": Nickname ,"Email":Email}
 
 @app.get("/Userby/{nicknameOremail}")
 async def user(nicknameORemail:str,):
