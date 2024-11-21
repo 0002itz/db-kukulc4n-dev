@@ -1,9 +1,6 @@
 import sqlite3 as sql
 from fastapi import FastAPI, HTTPException, Form
-from cryptography.fernet import Fernet
-
-key = Fernet.generate_key()
-f = Fernet(key)
+import bcrypt
 
 app = FastAPI()
 
@@ -22,15 +19,19 @@ async def allUsers():
     return { "AllUsers": users }
 
 @app.post("/newUser/{newUser}")
-async def createUser(Nickname:str = Form(...),Email:str = Form(...),ps:str = Form(...)):
+async def createUser(Nickname:str = Form(...),Email:str = Form(...),pw:str = Form(...)):
     conn = getConectDB()
     c = conn.cursor()
-    ps = f.encrypt(b'ps')
+    pasword = b'pw'
+    salt = bcrypt.gensalt()
+    desired_key_bytes = 32
+    rounds = 200
+    pw = bcrypt.kdf(pasword, salt, desired_key_bytes, rounds)
     data_insert = "INSERT INTO Users (userNickname,Email,ps) Values (?,?,?);"
-    c.execute(data_insert,(Nickname,Email,ps,))
+    c.execute(data_insert,(Nickname,Email,pw,))
     conn.commit()
     c.close()
-    return{ "User Create": Nickname ,"Email":Email}
+    return{ "User Create": Nickname ,"Email":Email }
 
 @app.get("/Userby/{nicknameOremail}")
 async def user(nicknameORemail:str,):
