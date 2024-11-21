@@ -9,7 +9,7 @@ def getConectDB():
     conn.row_factory = sql.Row
     return conn
 
-@app.get("/users/")
+@app.get("/users/",tags=["Admin"])
 async def allUsers():
     conn = getConectDB()
     c = conn.cursor()
@@ -18,7 +18,7 @@ async def allUsers():
     c.close()
     return { "AllUsers": users }
 
-@app.post("/newUser/{newUser}")
+@app.post("/newUser/{newUser}",tags=["User"])
 async def createUser(Nickname:str = Form(...),Email:str = Form(...),pw:str = Form(...)):
     conn = getConectDB()
     c = conn.cursor()
@@ -33,7 +33,7 @@ async def createUser(Nickname:str = Form(...),Email:str = Form(...),pw:str = For
     c.close()
     return{ "User Create": Nickname ,"Email":Email }
 
-@app.get("/Userby/{nicknameOremail}")
+@app.get("/Userby/{nicknameOremail}",tags=["User"])
 async def user(nicknameORemail:str,):
     conn = getConectDB()
     c = conn.cursor()
@@ -46,7 +46,7 @@ async def user(nicknameORemail:str,):
         raise HTTPException(status_code=404, detail="User not found.")
     return { "User SELECT": userdata }
 
-@app.put("/newNickname/{Nickname}")
+@app.put("/newNickname/{Nickname}",tags=["User"])
 async def ChangNickname(newNickname:str,oldNickname:str):
     conn = getConectDB()
     c = conn.cursor()
@@ -56,7 +56,7 @@ async def ChangNickname(newNickname:str,oldNickname:str):
     c.close()
     return { "Nickname Update complet" : newNickname }
 
-@app.put("/newEmail/{newEmail}")
+@app.put("/newEmail/{newEmail}",tags=["User"])
 async def ChangEmail(newEmail:str,oldEmail:str):
     conn = getConectDB()
     c = conn.cursor()
@@ -66,7 +66,7 @@ async def ChangEmail(newEmail:str,oldEmail:str):
     c.close()
     return { "Email update ": emal[0] }
 
-@app.put("/newPw/{newPw}")
+@app.put("/newPw/{newPw}",tags=["User"])
 async def Changpasword(userNickname:str,newPw:str):
     conn = getConectDB()
     c = conn.cursor()
@@ -79,7 +79,7 @@ async def Changpasword(userNickname:str,newPw:str):
     c.close()
     return { "New Password": newpw }
 
-@app.delete("/delateUser/{userID}")
+@app.delete("/delateUser/{userID}",tags=["Admin"])
 async def delateUser(userID:int):
     conn = getConectDB()
     c = conn.cursor()
