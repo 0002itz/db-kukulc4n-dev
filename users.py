@@ -8,11 +8,9 @@ router = APIRouter()
 async def createUser(Nickname:str = Form(...),Email:str = Form(...),pw:str = Form(...)):
     conn = getConectDB()
     c = conn.cursor()
-
     password = b'pw'
     salt = bcrypt.gensalt()
     pw = bcrypt.hashpw(password, salt)
-
     data_insert = "INSERT INTO Users (userNickname,Email,ps) Values (?,?,?);"
     c.execute(data_insert,(Nickname,Email,pw,))
     conn.commit()
@@ -23,8 +21,8 @@ async def createUser(Nickname:str = Form(...),Email:str = Form(...),pw:str = For
 async def user(nickname:str| None = None , emai:str | None = None): #opcional busqueda de correo o por nickname
     conn = getConectDB()
     c = conn.cursor()
-    userdata = "SELECT userNickname,Email FROM Users WHERE userNickname=? OR Email=?;"
-    c.execute(userdata,(nickname,emai))
+    user_nick_email_querry = "SELECT userNickname,Email FROM Users WHERE userNickname=? OR Email=?;"
+    c.execute(user_nick_email_querry,(nickname,emai))
     userdata = c.fetchone()
     c.close()
     if userdata is None:
@@ -37,8 +35,8 @@ async def user(nickname:str| None = None , emai:str | None = None): #opcional bu
 async def ChangNickname(newNickname:str,oldNickname:str):
     conn = getConectDB()
     c = conn.cursor()
-    update="UPDATE Users SET userNickname = ? WHERE userNickname = ?;"
-    c.execute(update,(newNickname,oldNickname,))
+    creat_user_querry="UPDATE Users SET userNickname = ? WHERE userNickname = ?;"
+    c.execute(creat_user_querry,(newNickname,oldNickname,))
     conn.commit()
     c.close()
     return { "Nickname Update complet" : newNickname }
@@ -47,9 +45,10 @@ async def ChangNickname(newNickname:str,oldNickname:str):
 async def ChangEmail(newEmail:str,oldEmail:str):
     conn = getConectDB()
     c = conn.cursor()
-    update="UPDATE Email FROM Users WHERE Email = ?;"
-    c.execute(update,(oldEmail,))
     emal = newEmail
+    update_email_querry="UPDATE Email FROM Users WHERE Email = ?;"
+    c.execute(update_email_querry,(oldEmail,))
+    conn.commit()
     c.close()
     return { "Email update ": emal[0] }
 
@@ -57,11 +56,11 @@ async def ChangEmail(newEmail:str,oldEmail:str):
 async def Changpasword(userNickname:str,newPw:str):
     conn = getConectDB()
     c = conn.cursor()
-    password = b'newPw'
+    hash_password = b'newPw'
     salt = bcrypt.gensalt()
-    newPw = bcrypt.hashpw(password, salt)
-    newpw = "UPDATE Users SET ps = ? WHERE usernickname=?"
-    c.execute(newpw,(newPw,userNickname,))
+    newPw = bcrypt.hashpw(hash_password, salt)
+    newpw_querry = "UPDATE Users SET ps = ? WHERE usernickname=?"
+    c.execute(newpw_querry,(newPw,userNickname,))
     conn.commit()
     c.close()
     return { "New Password": newPw }
