@@ -8,11 +8,11 @@ router = APIRouter()
 async def createUser(Nickname:str = Form(...),Email:str = Form(...),pw:str = Form(...)):
     conn = getConectDB()
     c = conn.cursor()
-    pasword = b'pw'
+
+    password = b'pw'
     salt = bcrypt.gensalt()
-    desired_key_bytes = 32
-    rounds = 200
-    pw = bcrypt.kdf(pasword, salt, desired_key_bytes, rounds)
+    pw = bcrypt.hashpw(password, salt)
+
     data_insert = "INSERT INTO Users (userNickname,Email,ps) Values (?,?,?);"
     c.execute(data_insert,(Nickname,Email,pw,))
     conn.commit()
@@ -57,13 +57,11 @@ async def ChangEmail(newEmail:str,oldEmail:str):
 async def Changpasword(userNickname:str,newPw:str):
     conn = getConectDB()
     c = conn.cursor()
-    pasword = b'newPw'
+    password = b'newPw'
     salt = bcrypt.gensalt()
-    desired_key_bytes = 32
-    rounds = 200
-    newPw = bcrypt.kdf(pasword, salt, desired_key_bytes, rounds)
+    newPw = bcrypt.hashpw(password, salt)
     newpw = "UPDATE Users SET ps = ? WHERE usernickname=?"
     c.execute(newpw,(newPw,userNickname,))
     conn.commit()
     c.close()
-    return { "New Password": newPw.hex() }
+    return { "New Password": newPw }

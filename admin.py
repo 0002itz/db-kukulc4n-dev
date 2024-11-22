@@ -30,5 +30,4 @@ async def delateUser(userID:int):
     c.execute(data_delate)
     conn.commit()
     c.close()
-    print("User Delate.")
     return { "User Delate": f'ID {userID}' }
