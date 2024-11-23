@@ -1,21 +1,47 @@
 from conectDB import getConectDB
-from fastapi import APIRouter, HTTPException ,Form
+
+from fastapi import APIRouter, HTTPException ,Form , Path , Query
+from typing import Annotated
+#from pydantic# import BaseModel
 import bcrypt
+#
+##class UserModel(BaseModel):
+#    Nickname: str
+#    Email: str
+#    pw: str
 
 router = APIRouter()
 
 @router.post("/newUser/{newUser}")
-async def createUser(Nickname:str = Form(...),Email:str = Form(...),pw:str = Form(...)):
+async def createUser(*,
+    Nickname: Annotated[str, Query(alias="Nickname Verifide",max_length=20,min_length=8)] = ...,
+    Email: Annotated[str, Query(max_length=30,min_length=5)] = ...,
+    pw: Annotated[str, Query(max_length=30,min_length=5)] = ...,
+    ):
     conn = getConectDB()
     c = conn.cursor()
+
+    #if newUser.Nickname is None:
+    #    raise HTTPException(status_code=405, detail="Nickname requery")
+    #if newUser.Email is None:
+    #    raise HTTPException(status_code=405,detail="Email invalid")
+    #verifaid_pw=pass
+
     password = b'pw'
     salt = bcrypt.gensalt()
     pw = bcrypt.hashpw(password, salt)
     data_insert = "INSERT INTO Users (userNickname,Email,ps) Values (?,?,?);"
+
     c.execute(data_insert,(Nickname,Email,pw,))
     conn.commit()
     c.close()
-    return{ "User Create": Nickname ,"Email":Email }
+
+    user_create={ "Nickname" : Nickname }
+
+    if Email and pw:
+        user_create.update({ "Email" : Email, "pw" : pw,})
+
+    return user_create
 
 @router.get("/Userby/{nicknameOremail}")
 async def user(nickname:str| None = None , emai:str | None = None): #opcional busqueda de correo o por nickname
