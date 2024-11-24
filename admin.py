@@ -11,16 +11,16 @@ async def allUsers():
     c.execute( "SELECT * FROM Users" )
     users = c.fetchall()
     c.close()
-    decoded_users = []
+    user_list = []
     for user in users:
         user_data = {
             "userID": user[0],
             "nickname": user[1],
             "email": user[2],
-            "password_hash": user[3].hex() if isinstance(user[3], bytes) else user[3]
+            "password_hash": user[3].hex()
         }
-        decoded_users.append(user_data)
-    return { "AllUsers": decoded_users }
+        user_list.append(user_data)
+    return { "AllUsers": user_list }
 
 @router.delete("/delateUser/{userID}")
 async def delateUser(userID:int):

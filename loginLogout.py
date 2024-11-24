@@ -17,4 +17,4 @@ async def login(Nickname: str = Form(...), pw: str = Form(...)):
         raise HTTPException(status_code=404, detail="User not found.")
     if bcrypt.checkpw(pw.encode('utf-8'), stored_password):# Compara la contraseña ingresada con la almacenada usando bcrypt
         return {"User validate": Nickname, "Message": "Password matches!"}
-    return {"User validate": Nickname, "Message": "Invalid password"}
+    raise HTTPException(status_code=404, detail="Invalid password.")
