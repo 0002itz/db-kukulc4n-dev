@@ -1,15 +1,11 @@
 import sqlite3 as sql
-from cryptography.fernet import Fernet
-
-key = Fernet.generate_key()
-f = Fernet(key)
 
 def createDB():
     conn =sql.connect("test-kuku.db")
     conn.commit()
     conn.close()
 
-def createTabla():
+def main():
     conn =sql.connect("./db/test-kuku.db")
     c = conn.cursor()
     c.execute(
@@ -18,7 +14,8 @@ def createTabla():
         userID INTEGER PRIMARY KEY AUTOINCREMENT,
         userNickname TEXT NOT NULL,
         Email TEXT NOT NULL,
-        ps TEXT NOT NULL
+        pw TEXT NOT NULL,
+        disabled INTEGER
         )"""
     )
     conn.commit()

@@ -1,58 +1,72 @@
 from conectDB import getConectDB
 
-from fastapi import APIRouter, HTTPException ,Form , Path , Query, Body
-from typing import Annotated
-from pydantic import BaseModel
-import bcrypt
 
+from typing import Annotated
+from fastapi import APIRouter, HTTPException ,Form , Path , Query, Body, Depends
+#from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from pydantic import BaseModel,Field
+#from passlib.context import CryptContext
+import bcrypt
+from passlib.hash import pbkdf2_sha256
+
+SECRET_KEY = "9a6628012fff5c0b8e98f27a0cd8ddceab9892c21554d464aabc4e57965a9940"
+ALGORITHM = "HS256"
 class Post(BaseModel):
-    nickname_Model: str
+    user_nickname_Model: str
     date_post_Model: str
     title_post_Mdoel:str
     post_Model: str
 
-
 router = APIRouter()
 
+#pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+#oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+class User(BaseModel):
+    Nickname: Annotated[str, Body(title="Verifide Nickname of New User.",max_length=20,min_length=8)]=Field(examples=["Carlos Vallarta"])
+    Email: Annotated[str, Body(title="Verifide Email of New User.",max_length=30,min_length=5)]=Field(examples=["foo@gamil.com"])
+    pw: Annotated[str, Body(title="Verifide pW of New User.",max_length=30,min_length=5)]=Field(examples=["ExampleOfPasWord"])
+    disabled: Annotated[bool, Body(title="autorizado?",default=1)]=Field(examples=["1"])
+
 @router.post("/newUser/{newUser}")
-async def create_user(*,
-    Nickname: Annotated[str, Query(title="Verifide Nickname of New User.",max_length=20,min_length=8)] = ...,
-    Email: Annotated[str, Query(title="Verifide Email of New User.",max_length=30,min_length=5)] = ...,
-    pw: Annotated[str, Query(title="Verifide pW of New User.",max_length=30,min_length=5)] = ...,
-    ):
+async def create_user(user: User):
     conn = getConectDB()
     c = conn.cursor()
 
-    user_to_verified="SELECT userNickname FROM Users WHERE userNickname=?;"
-    c.execute(user_to_verified,(Nickname,))
-    user_data_fecth = c.fetchall()
+    def user_verifier():                   # Verificar si se encontró el usuario
+        user_to_verified_querry="SELECT userNickname FROM Users WHERE userNickname=?;"
+        c.execute(user_to_verified_querry,(user.Nickname,))
+        user_data_fecth = c.fetchall()
+        user_exist=user_data_fecth
+        if user_exist:
+            raise HTTPException(status_code=401, detail="User already exists.")
 
-    email_to_verified="SELECT Email FROM Users WHERE Email=?;"
-    c.execute(email_to_verified,(Email,))
-    email_data_fect=c.fetchone()
+    def email_verifier():
+        email_to_verified_query="SELECT Email FROM Users WHERE Email=?;"
+        c.execute(email_to_verified_query,(user.Email,))
+        data_fect=c.fetchone()
+        email_verified=data_fect
+        if email_verified:
+            raise HTTPException(status_code=401,detail="Emai already in use.")
 
-    user_verified=user_data_fecth
-    email_verified=email_data_fect
+    def password_hasher():
+        pw = pbkdf2_sha256.hash(user.pw)
+        return pw
+        #return pwd_context.hash(user.pw)
 
-    if user_verified:                   # Verificar si se encontró el usuario
-        raise HTTPException(status_code=401, detail="User already exists.")
+    user_verifier()
+    email_verifier()
+    pw_hash=password_hasher()
 
-    if email_verified:
-        raise HTTPException(status_code=401,detail="Emai already in use.")
-    else:
-        password = b'pw'
-        salt = bcrypt.gensalt()
-        pw = bcrypt.hashpw(password, salt)
-    
-        data_insert = "INSERT INTO Users (userNickname,Email,ps) Values (?,?,?);"
-        c.execute(data_insert,(Nickname,Email,pw,))#,filter(Nickname==userNickname).first())
-        conn.commit()
-        c.close()
-    
-        user_create={ "User Created" : Nickname }
-    
-        if Email and pw:
-            user_create.update({ "Email" : Email, "pw" : pw,})
+    data_insert = "INSERT INTO Users (userNickname,Email,pw,disabled) Values (?,?,?,?);"
+    c.execute(data_insert,(user.Nickname,user.Email,pw_hash,user.disabled))#,filter(Nickname==userNickname).first())
+    conn.commit()
+    c.close()
+
+    user_create={ "User Created" : user.Nickname }
+
+    if user.Email and user.pw:
+        user_create.update({ "Email" : user.Email,})
     
     return user_create
 
@@ -119,7 +133,7 @@ async def chang_pasword(userNickname:str,newPw:str):
     salt = bcrypt.gensalt()
     newPw = bcrypt.hashpw(hash_password, salt)
 
-    newpw_querry = "UPDATE Users SET ps = ? WHERE usernickname=?"
+    newpw_querry = "UPDATE Users SET pw = ? WHERE usernickname=?"
     c.execute(newpw_querry,(newPw,userNickname,))
     conn.commit()
 

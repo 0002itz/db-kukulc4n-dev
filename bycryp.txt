@@ -25,3 +25,43 @@ password = b'my_secret_password'
 salt = bcrypt.gensalt()
 key = bcrypt.kdf(password, salt, desired_key_bytes=32, rounds=200)
 print(key.hex())  # Output: a hexadecimal key
+
+
+
+-------------------- passlib
+pip install passlib
+
+from passlib.hash import pbkdf2_sha256
+
+password = "my_secret_password"
+hash = pbkdf2_sha256.hash(password)
+
+print(hash)  # Output: $pbkdf2-sha256$29000$N2YMIWQsBWBMae09x1jrPQ$1t8iyB2A.WF/Z5JZv.lfCIhXXN33N23OSgQYThBYRfk
+
+from passlib.hash import pbkdf2_sha256
+
+password = "my_secret_password"
+hash = "$pbkdf2-sha256$29000$N2YMIWQsBWBMae09x1jrPQ$1t8iyB2A.WF/Z5JZv.lfCIhXXN33N23OSgQYThBYRfk"
+
+if pbkdf2_sha256.verify(password, hash):
+    print("Password is valid")
+else:
+    print("Password is invalid")
+
+Supported Algorithms
+Passlib supports over 30 password hashing algorithms, including:
+
+Argon2
+PBKDF2 (with various hash functions, such as SHA-256, SHA-512, and BLAKE2b)
+Bcrypt
+Scrypt
+SHA-256
+SHA-512
+BLAKE2b
+
+Additional Tips
+Always use a secure random salt when hashing passwords.
+Store the hashed password and salt separately.
+Use a sufficient work factor (e.g., iterations) to slow down the hashing process and make it more resistant to brute-force attacks.
+Never store plaintext passwords or hash functions in your code; instead, use Passlib’s built-in hashing functions.
+By following these best practices and using Passlib, you can securely store and verify passwords in your Python application.

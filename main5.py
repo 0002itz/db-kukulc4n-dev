@@ -4,10 +4,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, FastAPI, HTTPException, status, APIRouter
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
+from passlib.hash import pbkdf2_sha256
 from pydantic import BaseModel
 
 # to get a string like this run:
@@ -39,7 +40,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-router = FastAPI()
+app = FastAPI()
 
 def get_user_from_db():
     conn = getConectDB()
@@ -63,10 +64,10 @@ temp_db=get_user_from_db()
 
 
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    return pbkdf2_sha256.verify(plain_password, hashed_password)
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    return pbkdf2_sha256.hash(password)
 
 def get_user(db,username: str):#
     if username in db:
@@ -120,7 +121,7 @@ async def get_current_active_user(
     return current_user
 
 
-@router.post("/token")
+@app.post("/token")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
@@ -138,14 +139,14 @@ async def login_for_access_token(
     return Token(access_token=access_token, token_type="bearer")
 
 
-@router.get("/users/me/", response_model=User)
+@app.get("/users/me/", response_model=User)
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     return current_user
 
 
-@router.get("/users/me/items/")
+@app.get("/users/me/items/")
 async def read_own_items(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
