@@ -2,12 +2,13 @@ from conectDB import getConectDB
 
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
+from fastapi import Depends, APIRouter, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 import jwt
-from fastapi import Depends, FastAPI, HTTPException, status, APIRouter
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
+from passlib.hash import pbkdf2_sha256
 from pydantic import BaseModel
 
 # to get a string like this run:
@@ -39,7 +40,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-router = FastAPI()
+router = APIRouter()
 
 def get_user_from_db():
     conn = getConectDB()
@@ -50,12 +51,11 @@ def get_user_from_db():
     c.close()
     user_dict={}
     for user in users:
-        user_dict[user[1]] = {  
+        user_dict[user[1]] = {
             "username": user[1],
-            "email": user[2],  
-            "hashed_password": user[3],  
-            "disabled": user[4]  
-            
+            "email": user[2],
+            "hashed_password": user[3],
+            "disabled": user[4]
         }
     return user_dict
 
@@ -63,10 +63,10 @@ temp_db=get_user_from_db()
 
 
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    return pbkdf2_sha256.verify(plain_password, hashed_password)
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    return pbkdf2_sha256.hash(password)
 
 def get_user(db,username: str):#
     if username in db:

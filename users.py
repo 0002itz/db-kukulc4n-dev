@@ -9,8 +9,6 @@ from pydantic import BaseModel,Field
 import bcrypt
 from passlib.hash import pbkdf2_sha256
 
-SECRET_KEY = "9a6628012fff5c0b8e98f27a0cd8ddceab9892c21554d464aabc4e57965a9940"
-ALGORITHM = "HS256"
 class Post(BaseModel):
     user_nickname_Model: str
     date_post_Model: str
@@ -18,9 +16,6 @@ class Post(BaseModel):
     post_Model: str
 
 router = APIRouter()
-
-#pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-#oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 class User(BaseModel):
     Nickname: Annotated[str, Body(title="Verifide Nickname of New User.",max_length=20,min_length=8)]=Field(examples=["Carlos Vallarta"])
@@ -87,9 +82,9 @@ async def sherch_user_by_nickname_or_email(nickname:str| None = None , emai:str 
 
     user_nick_email_querry = "SELECT userNickname,Email FROM Users WHERE userNickname=? OR Email=?;"
     c.execute(user_nick_email_querry,(nickname,emai))
+    userdata = c.fetchone()
     c.close()
 
-    userdata = c.fetchone()
     if userdata is None:
         raise HTTPException(status_code=404, detail="User not found.")
     if emai:
@@ -125,13 +120,17 @@ async def chang_email(newEmail:str,oldEmail:str):
     return { "Email update ": emal[0] }
 
 @router.put("/newPw/{newPw}")
-async def chang_pasword(userNickname:str,newPw:str):
+async def chang_pasword(newPw:str,userNickname:str,):
     conn = getConectDB()
     c = conn.cursor()
 
-    hash_password = b'newPw'
-    salt = bcrypt.gensalt()
-    newPw = bcrypt.hashpw(hash_password, salt)
+    #hash_password = b'newPw'
+    #salt = bcrypt.gensalt()
+    #newPw = bcrypt.hashpw(hash_password, salt)
+    #pw_hash = pbkdf2_sha256.hash(newPw)
+    password = newPw
+    pw_hash = pbkdf2_sha256.hash(password)
+    newPw=pw_hash
 
     newpw_querry = "UPDATE Users SET pw = ? WHERE usernickname=?"
     c.execute(newpw_querry,(newPw,userNickname,))
@@ -139,4 +138,4 @@ async def chang_pasword(userNickname:str,newPw:str):
 
     c.close()
 
-    return { "New Password": newPw }
+    return { "Password change of": userNickname }

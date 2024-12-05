@@ -17,7 +17,7 @@ async def allUsers():
             "userID": user[0],
             "nickname": user[1],
             "email": user[2],
-            "password_hash": user[3].hex()
+            "password_hash": user[3]
         }
         user_list.append(user_data)
     return { "AllUsers": user_list }
